@@ -17,7 +17,7 @@
 #define STEREO 0
 
 #define VTGRAPE // use Virtualized GRAPE library
-#define GL_ON
+//#define GL_ON
 
 /*#define SOCK_ON*/
 #define LAP_TIME
@@ -4759,9 +4759,56 @@ int main(int argc, char **argv)
   double d0;
   char sbuf[50];
   char tt_name[256];
+  int md_loop;
 
-  np = 3;    ///Number of particles from 1 - 9
-  temp = 300;// Initial Temperature
+  ////Default Configuration (No arguments Passed to Claret)///
+  np 	= 4;    ///Number of particles from 1 - 9
+  temp 	= 300;// Initial Temperature
+  md_step=10000;
+  md_loop=10;
+  grape_flg = 1;// CPU =0 , GPU = 1
+  ////////////////////////////
+
+  /////////////////////////////////////////////
+  //Reading Arguments
+  if ( 1 <= argc){
+
+	  if(argc == 2){
+		  md_step = atoi(argv[1]);
+		  printf("MD_STEP=%d\tMD_LOOP=%d\tPARTICLE=%d\tACCEL=%d\n"
+		  				 ,md_step,md_loop,np,grape_flg);
+
+	  }
+	  if(argc == 3){
+		  md_step = atoi(argv[1]);
+		  md_loop = atoi(argv[2]);
+		  printf("MD_STEP=%d\tMD_LOOP=%d\tPARTICLE=%d\tACCEL=%d\n"
+				 ,md_step,md_loop,np,grape_flg);
+
+	  }
+
+	  if(argc == 4){
+		  md_step = atoi(argv[1]);
+		  md_loop = atoi(argv[2]);
+		  np	  = atoi(argv[3]);
+		  printf("MD_STEP=%d\tMD_LOOP=%d\tPARTICLE=%d\tACCEL=%d\n"
+				 ,md_step,md_loop,np,grape_flg);
+
+	  }
+
+	  if(argc == 5){
+		  md_step = atoi(argv[1]);
+		  md_loop = atoi(argv[2]);
+		  np	  = atoi(argv[3]);
+		  grape_flg	  = atoi(argv[4]);
+		  printf("MD_STEP=%d\tMD_LOOP=%d\tPARTICLE=%d\tACCEL=%d\n"
+				 ,md_step,md_loop,np,grape_flg);
+
+	  }
+
+  }
+
+  /////////////////////////////////////////////
 
 #ifdef GL_ON
   	sub_x = 1.5;
@@ -4806,11 +4853,7 @@ int main(int argc, char **argv)
 #else
   //////////Using only results from Console///////////////
   char *acc = "CPU";
-  int md_loop;
 
-  md_step=10;
-  md_loop=10;
-  grape_flg = 1;// CPU =0 , GPU = 1
 
   if (grape_flg == 0) acc ="CPU";
   else acc = "GPU";
