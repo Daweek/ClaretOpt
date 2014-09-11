@@ -11,6 +11,8 @@
 // ***** CUDA includes
 #include <cutil.h>
 
+#define GL_ON
+#define KER
 #define NMAX      8192
 #define NTHRE       64
 #define ATYPE        8
@@ -54,7 +56,7 @@ int flg1=0,flg2=0,flg3=0;
 __global__
 void update_coor_kernel(int n3, float *vl,VG_XVEC *cd,float *xs,
                         float *fc,float *side){
-
+#ifdef KER
 	int tid  = threadIdx.x + blockIdx.x * blockDim.x;
 
     if (tid < n3){
@@ -62,7 +64,7 @@ void update_coor_kernel(int n3, float *vl,VG_XVEC *cd,float *xs,
             cd[tid/3].r[tid % 3]   +=   vl[tid];
 			if (cd[tid/3].r[tid % 3] < 0 || cd[tid/3].r[tid % 3] > side[tid % 3]) vl[tid] *= -1;
     }
-
+#endif
 }
 
 //////////////////NaCl Optmized
@@ -78,6 +80,7 @@ __constant__ VG_MATRIX c_matrix[4]={
 __device__ __inline__
 void inter_if(float xj[3], float xi[3], float fi[3], int t, float xmax,
 		float xmax1) {
+#ifdef KER
 	int k;
 	float dn2, r, inr, inr2, inr4, inr8, d3, dr[3];
 	float pb = (float) (0.338e-19 / (14.39 * 1.60219e-19)), dphir;
@@ -116,10 +119,12 @@ void inter_if(float xj[3], float xi[3], float fi[3], int t, float xmax,
 #endif
 	for (k = 0; k < 3; k++)
 		fi[k] += dphir * dr[k];
+#endif
 }
 
 __global__
 void nacl_kernel_if2(VG_XVEC *x, int n, int nat, float xmax, float *fvec) {
+#ifdef KER
 	int tid = threadIdx.x;
 	int jdiv = tid / NTHREOPT2;
 	int i = blockIdx.x * NTHREOPT2 + (tid & (NTHREOPT2 - 1));
@@ -192,11 +197,12 @@ void nacl_kernel_if2(VG_XVEC *x, int n, int nat, float xmax, float *fvec) {
 	if (jdiv == 0)
 		for (k = 0; k < 3; k++)
 			fvec[i * 3 + k] = s_fi[tid][k];
+#endif
 }
 
  __global__
 void rem_offset_kernell (int n3, float *force){
-
+#ifdef KER
 	int tid = threadIdx.x + blockIdx.x *blockDim.x;
 
 	float center [3];
@@ -219,13 +225,14 @@ void rem_offset_kernell (int n3, float *force){
 		 force[tid*3+1]-= center[1];
 		 force[tid*3+2]-=  center[2];
 	}
+#endif
 }
 
 
 __global__
 void velforce_kernel(int n3, float *fc, float *a_mass, float *vl,
                      VG_XVEC *atype, int *atype_mat, float hsq,float *ekin1){
-
+#ifdef KER
 	__shared__ float cache [ThreadsPB];
     int indx = threadIdx.x;
 	int tid  = threadIdx.x + blockIdx.x * blockDim.x;
@@ -257,7 +264,7 @@ void velforce_kernel(int n3, float *fc, float *a_mass, float *vl,
     }
 
 	if (indx == 0) ekin1[blockIdx.x] = cache [0];
-
+#endif
 }
 
 
@@ -265,6 +272,9 @@ __global__
 void serie_kernel (	float *ekin,float *mtemp,float *mpres,float *xs,float tscale,
                     float nden, float vir,int s_num,int w_num,float rtemp,
 					float lq,float hsq,float *ekin1a, int limi){
+
+
+#ifdef KER
 		float aux = 0;
 		float aux1 = *xs;
 
@@ -275,6 +285,7 @@ void serie_kernel (	float *ekin,float *mtemp,float *mpres,float *xs,float tscale
         *mpres  = nden / 3.f * ((*ekin) - (vir)) / (s_num + w_num);
         aux1 += (*mtemp - rtemp) /  lq * hsq *.5f;
 		*xs = aux1;
+#endif
 }
 
 
@@ -401,6 +412,7 @@ void mdlop(int n3,int grape_flg,double phi [3],double *phir,double *iphi, double
     vla 	= (float*)malloc(n3*sizeof(float));
 	ekin1a 	= (float*)malloc(blocksPGrid*sizeof(float));
 
+#if 1
 	CUDA_SAFE_CALL(cudaMalloc((void**)&d_side,3*sizeof(float)));
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_amass,4*sizeof(float)));
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_vl,n3*sizeof(float)));
@@ -442,7 +454,10 @@ void mdlop(int n3,int grape_flg,double phi [3],double *phir,double *iphi, double
 		velforce_kernel<<<BLOCKS,THREADS>>>(n3,d_force,d_amass,d_vl,d_x,d_atypemat,hsqf,d_ekin1);
 		serie_kernel<<<1,1>>>(d_ekin,d_mtemp,d_mpres,d_xs,ftscale,fnden,fvir,s_num,w_num,frtemp,flq,hsqf,d_ekin1,blocksPGrid);
 
-
+#ifndef GL_ON
+/////////Print System Information
+		//printf("Force Computation Speed: %.3fs/step %.1fGflops\n",md_time-md_time0,(double)n*(double)n*78/(md_time-md_time0)*1e-9);
+#endif
 	}
 
 /////////////////Copy back to the CPU
@@ -453,6 +468,17 @@ void mdlop(int n3,int grape_flg,double phi [3],double *phir,double *iphi, double
 	CUDA_SAFE_CALL(cudaMemcpy(&fmtemp,d_mtemp,sizeof(float),cudaMemcpyDeviceToHost));
 	CUDA_SAFE_CALL(cudaMemcpy(&fmpres,d_mpres,sizeof(float),cudaMemcpyDeviceToHost));
 	CUDA_SAFE_CALL(cudaMemcpy(vec,d_x,n*sizeof(VG_XVEC),cudaMemcpyDeviceToHost));
+    CUDA_SAFE_CALL(cudaFree(d_vl));
+    CUDA_SAFE_CALL(cudaFree(d_amass));
+    CUDA_SAFE_CALL(cudaFree(d_atypemat));
+	CUDA_SAFE_CALL(cudaFree(d_xs));
+	CUDA_SAFE_CALL(cudaFree(d_ekin));
+	CUDA_SAFE_CALL(cudaFree(d_mtemp));
+	CUDA_SAFE_CALL(cudaFree(d_mpres));
+	CUDA_SAFE_CALL(cudaFree(d_ekin1));
+    CUDA_SAFE_CALL(cudaFree(d_x));
+    CUDA_SAFE_CALL(cudaFree(d_force));
+#endif
 
 	for(i=0;i<n;i++) for(j=0;j<3;j++) force[i*3+j]=(double) forcef[i*3+j];
     for(p=0;p<n3;p++) {
@@ -472,21 +498,12 @@ void mdlop(int n3,int grape_flg,double phi [3],double *phir,double *iphi, double
 /////////////////////////////////////////////////////////
 // free allocated global memory
 
-    CUDA_SAFE_CALL(cudaFree(d_x));
-    CUDA_SAFE_CALL(cudaFree(d_force));
+
 	//free(matrix);
 	free(vec);
     free(forcef);
 	free(vla);
 	free(ekin1a);
-    CUDA_SAFE_CALL(cudaFree(d_vl));
-    CUDA_SAFE_CALL(cudaFree(d_amass));
-    CUDA_SAFE_CALL(cudaFree(d_atypemat));
-	CUDA_SAFE_CALL(cudaFree(d_xs));
-	CUDA_SAFE_CALL(cudaFree(d_ekin));
-	CUDA_SAFE_CALL(cudaFree(d_mtemp));
-	CUDA_SAFE_CALL(cudaFree(d_mpres));
-	CUDA_SAFE_CALL(cudaFree(d_ekin1));
 
 }
 
