@@ -9,7 +9,7 @@ MDGRAPE_LIB = -L$(CUDA)/lib -lcudart
 
 CUDAINC   = -I. -I$(CUDA)/include -I$(CUDA_SDK)/common/inc -I$(CUDA_4.1_SDK)/common/inc -I/usr/local/include
 CUDALIB   = -L/usr/local/cuda/samples/common/lib/linux/armv7l/ -L$(CUDA)/lib -lcudart
-GLLIB  		= -L/usr/local/lib -lGLEW -lglut -lGLU -lGL   
+GLLIB  		= -L/usr/local/lib -lglut -lGLU -lGL   
 LIB 			= $(MDGRAPE_LIB) $(RENDER_LIB) $(CUDALIB) $(CUDAGLLIB) $(GLLIB) -lm
 
 NVCC       = $(CUDA)/bin/nvcc 
