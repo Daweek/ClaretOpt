@@ -11,7 +11,7 @@
 // ***** CUDA includes
 #include <cutil.h>
 
-#define GL_ON
+//#define GL_ON
 #define KER
 #define NMAX      8192
 #define NTHRE       64
@@ -454,10 +454,10 @@ void mdlop(int n3,int grape_flg,double phi [3],double *phir,double *iphi, double
 		velforce_kernel<<<BLOCKS,THREADS>>>(n3,d_force,d_amass,d_vl,d_x,d_atypemat,hsqf,d_ekin1);
 		serie_kernel<<<1,1>>>(d_ekin,d_mtemp,d_mpres,d_xs,ftscale,fnden,fvir,s_num,w_num,frtemp,flq,hsqf,d_ekin1,blocksPGrid);
 
-#ifndef GL_ON
+//#ifndef GL_ON
 /////////Print System Information
 		//printf("Force Computation Speed: %.3fs/step %.1fGflops\n",md_time-md_time0,(double)n*(double)n*78/(md_time-md_time0)*1e-9);
-#endif
+//#endif
 	}
 
 /////////////////Copy back to the CPU

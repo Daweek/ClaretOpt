@@ -1,5 +1,5 @@
 #include "cras36.h"
-#define GL_ON
+//#define GL_ON
 //////////////////OpenGL/////////////////////
 //////////////////Functions//////////////////
 //////////////////////////////////////////////
@@ -2070,12 +2070,6 @@ void md_run()
 			gettimeofday(&time_v, NULL );
 			md_time = (time_v.tv_sec + time_v.tv_usec / 1000000.0);
 
-#ifndef GL_ON
-/////////Print System Information
-			printf("Force Computation Speed: %.3fs/step %.1fGflops\n",
-			md_time-md_time0,(double)n1*(double)n1*78/(md_time-md_time0)*1e-9);
-#endif
-
 	for (i = 0; i < n3; i++) {
 		if (atype[i / 3] == 2)
 			fc[i] *= hsq / (a_mass[2] + 2 * a_mass[3]);
@@ -2181,6 +2175,10 @@ void md_run()
 #ifndef GL_ON
   ////////////////////////////////////////////////////////////////
   /////////Print System Information
+
+  printf("Force Computation Speed: %.8fs/step %.1fGflops\n",
+		  md_time-md_time0,(double)n1*(double)n1*78/(md_time-md_time0)*1e-9);
+
   printf("m_clock:%4d mtemp:%f\n",m_clock,mtemp*epsv/kb);
 /*printf("%4d %f %f %f %f %f %f\n",m_clock,mtemp*epsv/kb
           ,(ekin/2.+phir)*erdp/(double)(s_num/2+w_num)
