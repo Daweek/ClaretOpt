@@ -19,7 +19,7 @@
 #define STEREO 0
 
 #define VTGRAPE // use Virtualized GRAPE library
-//#define GL_ON
+#define GL_ON
 
 /*#define SOCK_ON*/
 #define LAP_TIME

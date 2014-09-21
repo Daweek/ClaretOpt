@@ -1,5 +1,5 @@
 #include "cras36.h"
-//#define GL_ON
+#define GL_ON
 //////////////////OpenGL/////////////////////
 //////////////////Functions//////////////////
 //////////////////////////////////////////////
@@ -755,7 +755,7 @@ void single_display(int which)
 #ifdef LAP_TIME
     if(vflg >= 2){
       d1 = -2.2;
-      sprintf(str_buf,"%.3fs/step %.1fGflops",md_time-md_time0
+      sprintf(str_buf,"%.8fs/step %.1fGflops",md_time-md_time0
 #if defined(MDGRAPE3) || defined(VTGRAPE)
 	      ,(double)n1*(double)n1*78/(md_time-md_time0)*1e-9
 #else

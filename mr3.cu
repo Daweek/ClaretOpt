@@ -11,8 +11,8 @@
 // ***** CUDA includes
 #include <cutil.h>
 
-//#define GL_ON
-//#define KER
+#define GL_ON
+#define KER
 #define NMAX      8192
 #define NTHRE       64
 #define ATYPE        8
