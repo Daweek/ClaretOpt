@@ -4,10 +4,10 @@ CFLAGS = -g -O2 -ffast-math -funroll-loops
 CUDA 					= /usr/local/cuda-6.0
 CUDA_SDK			= /usr/local/cuda-6.0/samples
 CUDA_4.1_SDK 	= /usr/local/cuda-4.1/NVIDIA_GPU_Computing_SDK/C
-
+DSCUDA		= /usr/local/DSCUDA/dscudapkg1.7.5.1
 CUDA_LIB = -L$(CUDA)/lib -lcudart
 
-CUDAINC   = -I. -I$(CUDA)/include -I$(CUDA_SDK)/common/inc -I$(CUDA_4.1_SDK)/common/inc -I/usr/local/include -I/opt/X11/include -I/opt/X11/lib
+CUDAINC   = -I. -I$(CUDA)/include -I$(CUDA_SDK)/common/inc -I$(DSCUDA)/include/common/inc -I/usr/local/include -I/opt/X11/include -I/opt/X11/lib
 CUDALIB   = -lcudart
 GLLIB  		= -L/usr/local/lib -framework OpenGL -lGLUT  
 LIB 			= $(CUDA_LIB) $(CUDALIB) $(CUDAGLLIB) $(GLLIB) -lm
