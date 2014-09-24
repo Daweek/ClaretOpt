@@ -1,5 +1,5 @@
 #include "cras36.h"
-//#define GL_ON
+#define GL_ON
 //////////////////OpenGL/////////////////////
 //////////////////Functions//////////////////
 //////////////////////////////////////////////
@@ -765,7 +765,7 @@ void single_display(int which)
       glRasterPos3d(d0, d1, d2);
       glCallLists(strlen(str_buf), GL_BYTE, str_buf);
       d1 -= .3;
-      sprintf(str_buf,"%.3fs/frm %.1ffrm/s",(disp_time-disp_time0)
+      sprintf(str_buf,"%.8fs/frm %.1ffrm/s",(disp_time-disp_time0)
 	      ,1./(disp_time-disp_time0));
       glRasterPos3d(d0, d1, d2);
       glCallLists(strlen(str_buf), GL_BYTE, str_buf);
@@ -2204,7 +2204,7 @@ int main(int argc, char **argv)
   int md_loop;
 
   ////Default Configuration (No arguments Passed to Claret)///
-  np 	= 4;    ///Number of particles from 1 - 9
+  np 	= 9;    ///Number of particles from 1 - 9
   temp 	= 300;// Initial Temperature
   md_step=100;
   md_loop=10;

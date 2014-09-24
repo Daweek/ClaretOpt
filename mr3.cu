@@ -11,7 +11,7 @@
 // ***** CUDA includes
 #include <cutil.h>
 
-//#define GL_ON
+#define GL_ON
 #define KER
 #define NMAX      8192
 #define NTHRE       64
@@ -437,24 +437,21 @@ void mdlop(int n3,int grape_flg,double phi [3],double *phir,double *iphi, double
 	for(md_loop = 0; md_loop < md_step; md_loop++){
     	*m_clock+=1;
 
+    	gettimeofday(&time_v,NULL);
+    	*md_time0 = (time_v.tv_sec + time_v.tv_usec / 1000000.0);
 
-	 	update_coor_kernel<<<BLOCKS,THREADS>>>(n3,d_vl,d_x,d_xs,d_force,d_side);
-
-	 	gettimeofday(&time_v,NULL);
-	 	*md_time0 = (time_v.tv_sec + time_v.tv_usec / 1000000.0);
-
+    	update_coor_kernel<<<BLOCKS,THREADS>>>(n3,d_vl,d_x,d_xs,d_force,d_side);
 		nacl_kernel_if2<<<grid, threads>>>(d_x, n, nat, xmaxf, d_force);
 
+		rem_offset_kernell<<<BLOCKS,THREADS>>>(n3,d_force);
+		velforce_kernel<<<BLOCKS,THREADS>>>(n3,d_force,d_amass,d_vl,d_x,d_atypemat,hsqf,d_ekin1);
+		serie_kernel<<<1,1>>>(d_ekin,d_mtemp,d_mpres,d_xs,ftscale,fnden,fvir,s_num,w_num,frtemp,flq,hsqf,d_ekin1,blocksPGrid);
 		cudaThreadSynchronize();
 
 		gettimeofday(&time_v,NULL);
 		*md_time = (time_v.tv_sec + time_v.tv_usec / 1000000.0);
 
-		rem_offset_kernell<<<BLOCKS,THREADS>>>(n3,d_force);
-		velforce_kernel<<<BLOCKS,THREADS>>>(n3,d_force,d_amass,d_vl,d_x,d_atypemat,hsqf,d_ekin1);
-		serie_kernel<<<1,1>>>(d_ekin,d_mtemp,d_mpres,d_xs,ftscale,fnden,fvir,s_num,w_num,frtemp,flq,hsqf,d_ekin1,blocksPGrid);
-
-//#ifndef GL_ON
+		//#ifndef GL_ON
 /////////Print System Information
 		//printf("Force Computation Speed: %.3fs/step %.1fGflops\n",md_time-md_time0,(double)n*(double)n*78/(md_time-md_time0)*1e-9);
 //#endif

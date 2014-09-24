@@ -19,7 +19,7 @@
 #define STEREO 0
 
 #define VTGRAPE // use Virtualized GRAPE library
-//#define GL_ON
+#define GL_ON
 
 /*#define SOCK_ON*/
 #define LAP_TIME
@@ -172,7 +172,7 @@ GLfloat bond_color[] = { 0.12, 0.12, 0.35, 1.0 };
 
 double clear_color = 0.0;
 double radius = 0.45;
-int ditail = 15;
+int ditail = 5;
 
 double circle_cd[CIRCLE][3];
 GLfloat p_color[1][4];
@@ -564,10 +564,7 @@ void set_cd(int ini_m2)
     for(i = w_num; i < n1; i++){
       w_info[i] = (i-w_num)/(w_site-1);
     }
-    /*
-  for(i = 0; i < w_num3; i++)
-    printf("%d %d\n",i,w_info[i]);
-*/
+
     fccset_w(side);
 
     for(i0 = 0; i0 < w_num; i0++){
@@ -576,10 +573,7 @@ void set_cd(int ini_m2)
       for(j = 0; j < w_site-1; j++)
         atype[w_info[i]+j] = j+3;
     }
-    /*
-    for(i = 0; i < n3; i += 3)
-      printf("%d %d %f %f %f\n",i/3,atype[i/3],cd[i],cd[i+1],cd[i+2]);
-    */
+
     for(i = 0; i < w_num*4; i += 4){
       ang0 = ((double)rand()/(double)RAND_MAX)*360*PI/180;
       ang1 = ((double)rand()/(double)RAND_MAX)*360*PI/180;
@@ -663,10 +657,7 @@ void set_cd(int ini_m2)
       for(j = 0; j < w_site-1; j++)
         atype[i+j] = 3+j;
     }
-    /*
-    for(i = 0; i < n3; i += 3)
-      printf("%d %d %f %f %f\n",i/3,atype[i/3],cd[i],cd[i+1],cd[i+2]);
-    */
+
 
     for(i = 0; i < n1; i++)
       w_info[i] = -1;
@@ -684,32 +675,7 @@ void set_cd(int ini_m2)
     n2 = n1*2;
     n3 = n1*3;
 
-    /*
-    for(i = 0; i < w_num; i++)
-      printf("%d %d %d\n",i,w_index[i]/3,atype[w_index[i]/3]);
-    for(i = 0; i < n1; i++)
-      printf("%d %d\n",i,w_info[i]);
-    exit(0);
-    */
-    /*
-    i0 = 0;
-    for(i = 0; i < w_num; i++){
-      if(atype[w_index[i]/3] == 8){
-	i0++;
-      } else if(i0 != 0){
-	w_index[i-i0] = w_index[i];
-      }
-    }
-    w_num -= i0;
-    for(i = 0; i < w_num; i++)
-      printf("%d %d %d\n",i,w_index[i]/3,atype[w_index[i]/3]);
-    w_num3 = w_num*3;
-    */
-    /*
-    for(i = 0; i < n3; i += 3)
-      printf("%d %d %f %f %f\n",i/3,atype[i/3],cd[i],cd[i+1],cd[i+2]);
-    exit(0);
-    */
+
 #endif
 
     for(i = 0; i < w_num*4; i += 4){
@@ -743,17 +709,7 @@ void set_cd(int ini_m2)
       for(j = 0; j < w_site-1; j++)
         atype[w_info[i]+j] = j+3;
     }
-    /*
-    for(i0 = 0; i0 < w_num; i0++){
-      printf("%d %d\n",i0,w_index[i0]);
-    }
-    exit(0);
-    */
-    /*
-    for(i0 = 0; i0 < n1; i0++)
-      printf("%d %d %d\n",i0,atype[i0],w_info[i0]);
-    exit(0);
-    */
+
     ice_set(side);
 
 #if ZERO_P == 1
@@ -799,15 +755,7 @@ void set_cd(int ini_m2)
         }
       }
     }
-    /*
-    for(i = 0; i < n3; i += 3)
-      printf("%d %d %f %f %f\n",i/3,atype[i/3],cd[i],cd[i+1],cd[i+2]);
-    */
-    /*
-    for(i = 0; i < n1*4; i += 4)
-      printf("%d %d %f %f %f %f\n",i/4,atype[i/4]
-             ,ang[i],ang[i+1],ang[i+2],ang[i+3]);
-    */
+
     for(i0 = 0; i0 < w_num; i0++){
       i = w_index[i0];
       j = i0*4;
@@ -831,21 +779,10 @@ void set_cd(int ini_m2)
         cd[k*3+c+2] = cd[i+2] + d2;
       }
     }
-    /*
-    for(i = 0; i < n3; i += 3)
-      printf("%d %d %f %f %f\n",i/3,atype[i/3],cd[i],cd[i+1],cd[i+2]);
-    exit(0);
-    */
+
     side[0] += side[0]/npx/2;
 
 #ifdef GL_ON
-    /*
-    glPushMatrix();
-    glLoadIdentity();
-    glRotatef( 90,0.0,1.0,0.0);
-    glGetDoublev(GL_MODELVIEW_MATRIX, m_matrix);
-    glPopMatrix();
-    */
 
     ini_flg = 1;
     mouse_l = 1;
@@ -1083,15 +1020,7 @@ void set_cd(int ini_m2)
   }
 
 #if ZERO_P == 1
-  /*
-  for(i = 0; i < n3; i += 3){
-    cd[i]   += 4.5*side[0];
-    cd[i+1] += 4.5*side[1];
-    cd[i+2] += 4.5*side[2];
-  }
-  for(i = 0; i < 3; i++)
-  side[i] *= 10;
-  */
+
   for(i = 0; i < n3; i += 3){
     cd[i]   += 2*side[0];
     cd[i+1] += 2*side[1];
@@ -1109,30 +1038,7 @@ void set_cd(int ini_m2)
     sideh[i] = side[i] *.5;
     iside[i] = 1./side[i];
   }
-  /*
-  printf("%f %f %f\n",side[0],side[1],side[2]);
-  printf("%f %f %f\n",sideh[0],sideh[1],sideh[2]);
-  for(i = 0; i < n3; i += 3)
-    printf("%d %d %f %f %f\n",i/3,atype[i/3],cd[i],cd[i+1],cd[i+2]);
 
-  d0 = 0; d1 = 0; d2 = 0;
-  for(i = 0; i < (w_num+s_num)*3; i += 3){
-    d0 += cd[i];
-    d1 += cd[i+1];
-    d2 += cd[i+2];
-  }
-  printf("center % f % f % f\n"
-         ,d0/(w_num+s_num)
-         ,d1/(w_num+s_num)
-         ,d2/(w_num+s_num));
-
-  printf("center % f % f % f\n"
-         ,d0/(w_num+s_num)-sideh[0]
-         ,d1/(w_num+s_num)-sideh[1]
-         ,d2/(w_num+s_num)-sideh[2]);
-
-  exit(0);
-  */
   for(i = 0; i < KNUM+2; i++)
     atype_num[i] = 0;
   for(i = 0; i < n1; i++){
@@ -1156,15 +1062,6 @@ void set_cd(int ini_m2)
     cd[i+1] -= d7;
     cd[i+2] -= d8;
   }
-  /*
-  d0 = d1 = d2 = 0;
-  for(i = 0; i < ws_num3; i += 3){
-    d0 += (cd[i+1]*vl[i+2] - cd[i+2]*vl[i+1])*a_mass[atype_mat[atype[i/3]]];
-    d1 += (cd[i+2]*vl[i  ] - cd[i  ]*vl[i+2])*a_mass[atype_mat[atype[i/3]]];
-    d2 += (cd[i  ]*vl[i+1] - cd[i+1]*vl[i  ])*a_mass[atype_mat[atype[i/3]]];
-  }
-  printf("% f % f % f\n",d0,d1,d2);
-  */
 
   d3 = d4 = d5 = 0;
   for(i = 0; i < ws_num3; i += 3){ /* calculae moment of inertia */
@@ -1189,35 +1086,7 @@ void set_cd(int ini_m2)
     cd[i+2] += d8;
   }
 
-  /*
-  d0 = d1 = d2 = 0;
-  for(i = 0; i < ws_num3; i += 3){
-    d0 += (cd[i+1]*vl[i+2] - cd[i+2]*vl[i+1])*a_mass[atype_mat[atype[i/3]]];
-    d1 += (cd[i+2]*vl[i  ] - cd[i  ]*vl[i+2])*a_mass[atype_mat[atype[i/3]]];
-    d2 += (cd[i  ]*vl[i+1] - cd[i+1]*vl[i  ])*a_mass[atype_mat[atype[i/3]]];
-  }
-  printf("% f % f % f\n",d0,d1,d2);
-  */
 
-  /*
-  d0 = d1 = d2 = 0;
-  for(i = 0; i < n3; i += 3){
-    printf("%d %d %f %f %f % f % f % f\n",i/3,atype[i/3]
-           ,cd[i],cd[i+1],cd[i+2],vl[i],vl[i+1],vl[i+2]);
-    d0 += (cd[i+1]*vl[i+2] - cd[i+2]*vl[i+1])*a_mass[atype_mat[atype[i/3]]];
-    d1 += (cd[i+2]*vl[i  ] - cd[i  ]*vl[i+2])*a_mass[atype_mat[atype[i/3]]];
-    d2 += (cd[i  ]*vl[i+1] - cd[i+1]*vl[i  ])*a_mass[atype_mat[atype[i/3]]];
-  }
-  printf("% f % f % f\n",d0,d1,d2);
-
-  d0 = d1 = d2 = 0;
-  for(i = 0; i < n3; i += 3){
-    d0 += vl[i];
-    d1 += vl[i+1];
-    d2 += vl[i+2];
-  }
-  printf("% f % f % f\n",d0,d1,d2);
-  */
 
   ekin = 0;
   for(i = 0; i < n3; i += 3){
@@ -2297,39 +2166,10 @@ void ice_set2(double* side)
             cd[c]   = cd[i3]  +(double)i2*side[0]/npx;
             cd[c+1] = cd[i3+1]+(double)i1*side[1]/npy;
             cd[c+2] = cd[i3+2]+(double)i0*side[2]/npz;
-/*
-            printf("%d %d %d %f %f %f %f %f %f\n",i2,i1,i0
-                   ,cd[c],cd[c+1],cd[c+2]
-                   ,cd[i3],cd[i3+1],cd[i3+2]
-                   ,(double)i2*side[0]/npx
-                   ,(double)i1*side[1]/npy
-                   ,(double)i0*side[2]/npz
-                   );
-*/
-/*          atype[c/3] = 2;*/
+
             c += 3;
           }
-  /*
-  for(i = 0; i < n3; i += 3)
-    printf("%d %d %f %f %f\n",i/3,atype[i/3],cd[i],cd[i+1],cd[i+2]);
-  exit(0);
-  */
-/*
-  for(i = 0; i < w_num3/2; i += 3){
-    cd[i]   -= side[0]/npx/8;
-    cd[i+1] -= side[1]/npy/8;
-    cd[i+2] -= side[2]/npz/8;
-    cd[i+w_num3/2]   = cd[i]  + side[0]/npx/4;
-    cd[i+w_num3/2+1] = cd[i+1]+ side[1]/npy/4;
-    cd[i+w_num3/2+2] = cd[i+2]+ side[1]/npy/4;
-    if (cd[i+w_num3/2]   < 0)       cd[i+w_num3/2]   += side[0];
-    if (cd[i+w_num3/2]   > side[0]) cd[i+w_num3/2]   -= side[0];
-    if (cd[i+w_num3/2+1] < 0)       cd[i+w_num3/2+1] += side[1];
-    if (cd[i+w_num3/2+1] > side[1]) cd[i+w_num3/2+1] -= side[1];
-    if (cd[i+w_num3/2+2] < 0)       cd[i+w_num3/2+2] += side[2];
-    if (cd[i+w_num3/2+2] > side[2]) cd[i+w_num3/2+2] -= side[2];
-  }
-*/
+
 
   c = 0;
   for(i = 0; i < n1; i++){
@@ -2355,48 +2195,7 @@ void ice_set2(double* side)
     }
   }
 
-  /*
-  for(i = 0; i < 4*4; i += 4){
-    ang0 =-45*PI/180;
-    ang1 = 90*PI/180;
-    ang2 = 0*PI/180;
-    ang[i  ] = sin(ang1/2)*sin((ang2-ang0)/2);
-    ang[i+1] = sin(ang1/2)*cos((ang2-ang0)/2);
-    ang[i+2] = cos(ang1/2)*sin((ang2+ang0)/2);
-    ang[i+3] = cos(ang1/2)*cos((ang2+ang0)/2);
-    angh[i  ] = ang[i  ];
-    angh[i+1] = ang[i+1];
-    angh[i+2] = ang[i+2];
-    angh[i+3] = ang[i+3];
-  }
-  for(i = 4*4; i < 8*4; i += 4){
-    ang0 = 45*PI/180;
-    ang1 = 90*PI/180;
-    ang2 = 0*PI/180;
-    ang[i  ] = sin(ang1/2)*sin((ang2-ang0)/2);
-    ang[i+1] = sin(ang1/2)*cos((ang2-ang0)/2);
-    ang[i+2] = cos(ang1/2)*sin((ang2+ang0)/2);
-    ang[i+3] = cos(ang1/2)*cos((ang2+ang0)/2);
-    angh[i  ] = ang[i  ];
-    angh[i+1] = ang[i+1];
-    angh[i+2] = ang[i+2];
-    angh[i+3] = ang[i+3];
-  }
 
-  c = 32;
-  for(i0 = 0; i0 < npz; i0++)
-    for(i1 = 0; i1 < npy; i1++)
-      for(i2 = 0; i2 < npx; i2++)
-        if(i0 != 0 || i1 != 0 || i2 != 0)
-          for(i3 = 0; i3 < 32; i3++){
-            ang[c++] = ang[i3];
-          }
-  */
-/*
-  for(i = 0; i < w_num*4; i += 4)
-    printf("%d % f % f % f\n",i/4,ang[i],ang[i+1],ang[i+2],ang[i+3]);
-  exit(0);
-*/
 }
 int strsrc2(char str[],char key[], double *d)
 {
@@ -2418,13 +2217,5 @@ int strsrc2(char str[],char key[], double *d)
   *d = atof(val);
   return(1);
 }
-
-
-
-
-
-
-
-
 
 #endif /* CRAS36_H_ */
