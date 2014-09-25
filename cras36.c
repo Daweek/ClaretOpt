@@ -2220,9 +2220,9 @@ int main(int argc, char **argv)
   int md_loop;
 
   ////Default Configuration (No arguments Passed to Claret)///
-  np 	= 9;    ///Number of particles from 1 - 9
+  np 	= 4;    ///Number of particles from 1 - 9
   temp 	= 300;// Initial Temperature
-  md_step=10;
+  md_step=100;
   md_loop=10;
   grape_flg = 1;// CPU =0 , GPU = 1
   ////////////////////////////
