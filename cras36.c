@@ -1,10 +1,40 @@
 #include "cras36.h"
-#define GL_ON
+
 //////////////////OpenGL/////////////////////
 //////////////////Functions//////////////////
 //////////////////////////////////////////////
 
 #ifdef GL_ON
+void CircleTable (float **sint,float **cost,const int n){
+    int i;
+    /* Table size, the sign of n flips the circle direction */
+    const int size = abs(n);
+    /* Determine the angle between samples */
+    const float angle = 2*M_PI/(float)( ( n == 0 ) ? 1 : n );
+    /* Allocate memory for n samples, plus duplicate of first entry at the end */
+    *sint = (float *) calloc(sizeof(float), size+1);
+    *cost = (float *) calloc(sizeof(float), size+1);
+    /* Bail out if memory allocation fails, fgError never returns */
+    if (!(*sint) || !(*cost))
+    {
+        free(*sint);
+        free(*cost);
+        printf("Failed to allocate memory in fghCircleTable");
+		exit(0);
+    }
+    /* Compute cos and sin around the circle */
+    (*sint)[0] = 0.0;
+    (*cost)[0] = 1.0;
+    for (i=1; i<size; i++)
+    {
+        (*sint)[i] = sin(angle*i);
+        (*cost)[i] = cos(angle*i);
+    }
+    /* Last sample is duplicate of the first */
+    (*sint)[size] = (*sint)[0];
+    (*cost)[size] = (*cost)[0];
+}
+
 void mat_inv(double a[4][4])
 {
   int i,j,k;
@@ -353,12 +383,7 @@ void line_drow(int s_num, int e_num)
 {
   int i;
   GLfloat color[4];
-  /*
-  glMaterialfv(GL_FRONT, GL_DIFFUSE,bond_color);
-  for(i = 0; i < 3; i++)
-    color[i] = bond_color[i]*5;
-  glMaterialfv(GL_FRONT, GL_AMBIENT,color);
-  */
+
   glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE,bond_color);
   glLineWidth(1.0);
   glBegin(GL_LINES);
@@ -527,10 +552,7 @@ void single_display(int which)
     mouse_l = 0;
     ini_flg = 0;
   }
-  /*
-  if(kabe_flg == 1)
-    hako(ZERO_P ? 0:1);
-  */
+
   if(kabe_flg == 1)
     hako(1);
 
@@ -553,10 +575,221 @@ void single_display(int which)
   }
 #endif
 
+////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////Start Particle Drawing/////////////////////////
+#ifdef GL_DRAWARRAY
+  		glEnableClientState(GL_VERTEX_ARRAY);
+  		glEnableClientState(GL_NORMAL_ARRAY);
+  		glEnableClientState(GL_COLOR_ARRAY);
+  		glEnable(GL_COLOR_MATERIAL);
 
+  	  	GLuint buf[3];
+		glGenBuffers(3, buf);
 
+		int n = n3/3;
+		int q,m,l=3,k,p,t=0,r=0,slices =ditail,stacks=ditail/2;
+		float z0,z1,r0,r1,radios;
 
-#if 1
+		float *f_pol,*f_pol_n,*f_clr_a,*f_clr_b;
+		float *sint1,*cost1;
+		float *sint2,*cost2;
+
+		int cuad_mem    =(((ditail/2)-2)*ditail*6*3);//+1; por si ditail=5  =>0
+		int pol_mem 	= cuad_mem + (ditail*3*3*2);
+		int pol_size 	=(ditail*3*2)+(cuad_mem/3);
+
+		unsigned int size 		= (n*pol_mem)*sizeof(float);
+		unsigned int size_color = (n*pol_size*4)*sizeof(float);
+
+		f_pol    = (float*)malloc(n*pol_mem*sizeof(float));
+		f_pol_n  = (float*)malloc(n*pol_mem*sizeof(float));
+		f_clr_a	 = (float*)malloc(n*pol_size*4*sizeof(float));
+		f_clr_b	 = (float*)malloc(n*pol_size*4*sizeof(float));
+
+		/* Pre-computed circle */
+
+		CircleTable(&sint1,&cost1,-slices);
+		CircleTable(&sint2,&cost2,stacks*2);
+
+	//////Mapping The circle////////////////////////////////////////////////////
+	#if 1
+
+		for(i=0; i<n3;i+=3){
+			 if(drow_flg[atype_mat[atype[i/3]]] == 1){
+				 /////////////////////Compute Color
+				 for(q=0;q<pol_size;q++){
+				d0 = (vl[i]*vl[i]+vl[i+1]*vl[i+1]+vl[i+2]*vl[i+2])*500;
+				*(f_clr_a+0+r+q*4) = color_table[atype_mat[atype[i/3]]][0]+d0;
+				*(f_clr_a+1+r+q*4) = color_table[atype_mat[atype[i/3]]][1]+d0/3;
+				*(f_clr_a+2+r+q*4) = color_table[atype_mat[atype[i/3]]][2]+d0/3;
+				*(f_clr_a+3+r+q*4) = color_table[atype_mat[atype[i/3]]][3];
+
+				 }
+
+				radios=radius*r_table[atype_mat[atype[i/3]]];
+				///////Compute one Circle/////////////////////////
+						z0 = 1.0f;
+								z1 = cost2[(stacks>0)?1:0];
+								r0 = 0.0f;
+								r1 = sint2[(stacks>0)?1:0];
+
+								for(m=0;m<slices;m++){
+												*(f_pol+t+(9*m))     =cd[i]-sideh[0];
+												*(f_pol+t+1+(9*m))   =cd[i+1]-sideh[1];
+												*(f_pol+t+2+(9*m))   =cd[i+2]-sideh[2]+radios;
+												*(f_pol_n+t+(9*m))    =0;
+												*(f_pol_n+t+1+(9*m))  =0;
+												*(f_pol_n+t+2+(9*m))  =1;
+										}
+
+										l=3;
+
+										for (j=slices; j>0; j--){
+												*(f_pol+t+l)     =(cd[i]-sideh[0])+(cost1[j]*r1*radios);
+												*(f_pol+t+l+1)   =(cd[i+1]-sideh[1])+(sint1[j]*r1*radios);
+												*(f_pol+t+l+2)   =(cd[i+2]-sideh[2])+ (z1*radios);
+												*(f_pol_n+t+l)   =cost1[j]*r1;
+												*(f_pol_n+t+l+1) =sint1[j]*r1;
+												*(f_pol_n+t+l+2) =z1;
+
+												*(f_pol+t+l+3)   =(cd[i]-sideh[0])  + (cost1[j-1]*r1*radios);
+												*(f_pol+t+l+4)   =(cd[i+1]-sideh[1])+ (sint1[j-1]*r1*radios);
+												*(f_pol+t+l+5)   =(cd[i+2]-sideh[2])+ (z1*radios);
+												*(f_pol_n+t+l+3) =cost1[j-1]*r1;
+												*(f_pol_n+t+l+4) =sint1[j-1]*r1;
+												*(f_pol_n+t+l+5) =z1;
+
+												l+=9;
+										}
+				/////////////////
+									 l-=3;
+										for( k=1; k<stacks-1; k++ ){
+												z0 = z1; z1 = cost2[k+1];
+												r0 = r1; r1 = sint2[k+1];
+
+												p=0;
+												for(j=0; j<slices; j++){
+													 //////////////////First Triangle////////////////////////////////
+														*(f_pol+t+l+p)     = (cd[i]-sideh[0] ) +(cost1[j]*r1*radios);
+														*(f_pol+t+l+p+1)   = (cd[i+1]-sideh[1])+(sint1[j]*r1*radios);
+														*(f_pol+t+l+p+2)   = (cd[i+2]-sideh[2])+(z1*radios);
+														*(f_pol_n+t+l+p)   = cost1[j]*r1;
+														*(f_pol_n+t+l+p+1) = sint1[j]*r1;
+														*(f_pol_n+t+l+p+2) = z1;
+
+														*(f_pol+t+l+p+3)   = (cd[i]-sideh[0])  +(cost1[j]*r0*radios);
+														*(f_pol+t+l+p+4)   = (cd[i+1]-sideh[1])+(sint1[j]*r0*radios);
+														*(f_pol+t+l+p+5)   = (cd[i+2]-sideh[2])+(z0*radios);
+														*(f_pol_n+t+l+p+3) = cost1[j]*r0;
+														*(f_pol_n+t+l+p+4) = sint1[j]*r0;
+														*(f_pol_n+t+l+p+5) = z0;
+
+														*(f_pol+t+l+p+6)   = (cd[i]-sideh[0])  +(cost1[j+1]*r1*radios);
+														*(f_pol+t+l+p+7)   = (cd[i+1]-sideh[1])+(sint1[j+1]*r1*radios);
+														*(f_pol+t+l+p+8)   = (cd[i+2]-sideh[2])+(z1*radios);
+														*(f_pol_n+t+l+p+6) = cost1[j+1]*r1;
+														*(f_pol_n+t+l+p+7) = sint1[j+1]*r1;
+														*(f_pol_n+t+l+p+8) = z1;
+
+														/////////////////////Second Triangle//////////////////////////////
+
+														*(f_pol+t+l+p+9)   = *(f_pol+t+l+p+6);
+														*(f_pol+t+l+p+10)  = *(f_pol+t+l+p+7);
+														*(f_pol+t+l+p+11)  = *(f_pol+t+l+p+8);
+														*(f_pol_n+t+l+p+9) = *(f_pol_n+t+l+p+6);
+														*(f_pol_n+t+l+p+10)= *(f_pol_n+t+l+p+7);
+														*(f_pol_n+t+l+p+11)= *(f_pol_n+t+l+p+8);
+
+														*(f_pol+t+l+p+12)   = *(f_pol+t+l+p+3);
+														*(f_pol+t+l+p+13)   = *(f_pol+t+l+p+4);
+														*(f_pol+t+l+p+14)   = *(f_pol+t+l+p+5);
+														*(f_pol_n+t+l+p+12) = *(f_pol_n+t+l+p+3);
+														*(f_pol_n+t+l+p+13) = *(f_pol_n+t+l+p+4);
+														*(f_pol_n+t+l+p+14) = *(f_pol_n+t+l+p+5);
+
+														*(f_pol+t+l+p+15)  =(cd[i]-sideh[0] ) +(cost1[j+1]*r0*radios);
+														*(f_pol+t+l+p+16)  =(cd[i+1]-sideh[1])+(sint1[j+1]*r0*radios);
+														*(f_pol+t+l+p+17)  =(cd[i+2]-sideh[2])+(z0*radios);
+														*(f_pol_n+t+l+p+15)=cost1[j+1]*r0;
+														*(f_pol_n+t+l+p+16)=sint1[j+1]*r0;
+														*(f_pol_n+t+l+p+17)=z0;
+
+														p+=18;
+												}
+										l+=(slices)*6*3;
+										}
+				////////////////////
+										z0 = z1;
+										r0 = r1;
+
+										for(m=0;m<slices;m++){
+								*(f_pol+t+l+(9*m))     = cd[i]-sideh[0];
+								*(f_pol+t+l+1+(9*m))   = cd[i+1]-sideh[1];
+								*(f_pol+t+l+2+(9*m))   = cd[i+2]-sideh[2]-radios;
+								*(f_pol_n+t+l+(9*m))   = 0;
+								*(f_pol_n+t+l+1+(9*m)) = 0;
+								*(f_pol_n+t+l+2+(9*m)) = -1;
+										}
+
+										p=3;
+										for (j=0; j<slices; j++){
+												*(f_pol+t+l+p)     = (cd[i]-sideh[0])  + (cost1[j]*r0*radios);
+												*(f_pol+t+l+p+1)   = (cd[i+1]-sideh[1])+ (sint1[j]*r0*radios);
+												*(f_pol+t+l+p+2)   = (cd[i+2]-sideh[2])+ (z0*radios);
+												*(f_pol_n+t+l+p)   = cost1[j]*r0;
+												*(f_pol_n+t+l+p+1) = sint1[j]*r0;
+												*(f_pol_n+t+l+p+2) = z0;
+
+												*(f_pol+t+l+p+3)   = (cd[i]-sideh[0] ) +(cost1[j+1]*r0*radios);
+												*(f_pol+t+l+p+4)   = (cd[i+1]-sideh[1])+(sint1[j+1]*r0*radios);
+												*(f_pol+t+l+p+5)   = (cd[i+2]-sideh[2])+(z0*radios);
+												*(f_pol_n+t+l+p+3) = cost1[j+1]*r0;
+												*(f_pol_n+t+l+p+4) = sint1[j+1]*r0;
+												*(f_pol_n+t+l+p+5) = z0;
+
+												p+=9;
+										}
+
+					 }
+					 t+=pol_mem;
+					 r+=pol_size*4;
+		}
+
+	//////////////////////////Prepare Circle mapped buffers
+		glBindBuffer(GL_ARRAY_BUFFER, buf[0]);
+		glBufferData(GL_ARRAY_BUFFER,size,f_pol, GL_DYNAMIC_DRAW);
+		glVertexPointer(3, GL_FLOAT, 0, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, buf[1]);
+		glBufferData(GL_ARRAY_BUFFER, size,f_pol_n, GL_DYNAMIC_DRAW);
+		glNormalPointer(GL_FLOAT,0,0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, buf[2]);
+		glBufferData(GL_ARRAY_BUFFER,size_color,f_clr_a, GL_DYNAMIC_DRAW);
+		glColorPointer(4,GL_FLOAT,0,0);
+
+		//glDrawArrays(GL_TRIANGLES,0,pol_size*n);
+		glDrawArrays(GL_LINES,0,pol_size*n);
+
+	#endif
+		///////////////////////END of Drawing circle//////////////////////////
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
+		glDisable(GL_COLOR_MATERIAL);
+
+		glDeleteBuffers(3, buf);
+
+		free(f_clr_a);
+		free(f_clr_b);
+		free(f_pol_n);
+		free(f_pol);
+		free(sint1);
+		free(cost1);
+		free(sint2);
+		free(cost2);
+
+#else
   for(i = 0; i < n3; i += 3){
     if(drow_flg[atype_mat[atype[i/3]]] == 1){
       glPushMatrix();
@@ -588,11 +821,9 @@ void single_display(int which)
 #endif
 
 ///////////////////////////////////////////////////////////////////
-//////////////////////END OPNEgl PART////////////////////////////////////
+//////////////////////END Particle Drawing////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-
-
   if(c_flg != 0){
     for(i = n3; i < n3+c_num*3; i += 3){
       glPushMatrix();
@@ -632,30 +863,9 @@ void single_display(int which)
 #endif
 #endif
 
-#ifdef TELOP
-  d0 = -3.0;
-  d1 = -2.9;
-  d2 = -10;
-  glEnable(GL_ALPHA_TEST);
-  glEnable(GL_TEXTURE_2D);
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-#ifdef GL_VERSION_1_1
-  glBindTexture(GL_TEXTURE_2D, kabe_tex[0]);
-#endif
-  d3 = 1.35;
-  glBegin(GL_POLYGON);
-  glNormal3d(1,0,0);
-  glTexCoord2f(0.0, 0.0); glVertex3d(d0,d1,d2);
-  glTexCoord2f(0.0, 1.0); glVertex3d(d0+d3,d1,d2);
-  glTexCoord2f(1.0, 1.0); glVertex3d(d0+d3,d1+d3,d2);
-  glTexCoord2f(1.0, 0.0); glVertex3d(d0,d1+d3,d2);
-  glEnd();
-  glDisable(GL_ALPHA_TEST);
-  glDisable(GL_TEXTURE_2D);
-#endif
-
   glDisable(GL_LIGHTING);
-
+/////////////////////////////////////////////////////////
+//////////////////////////////////////End for Android part
   if(vflg >= 1){
 
     d0 = -2.4;
@@ -698,16 +908,7 @@ void single_display(int which)
     else
       sprintf(str_buf,"temp:%4.0fK time:%.3es"
 	      ,mtemp*epsv/kb,delt*m_clock);
-    /*
-    if(save_flg == 0){
-      sprintf(str_buf2," %d",b_clock);
-      strcat(str_buf,str_buf2);
-    }
-    */
-    /*
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE
-                 ,moji_c[(int)(clear_color+.5)]);
-    */
+
     glRasterPos3d(d0, d1, d2);
     glCallLists(strlen(str_buf), GL_BYTE, str_buf);
 
@@ -775,7 +976,6 @@ void single_display(int which)
 
 #if 1
 
-
     glEnable(GL_LIGHTING);
 
     d0 = 1.8;
@@ -823,152 +1023,6 @@ void single_display(int which)
 
 #endif
 
-#ifdef SUBWIN
-
-  if(vflg >= 1){
-    mag = 1;
-    glLineWidth(1.0);
-    glNormal3d(0.0,0.0,1.0);
-    /*
-    glMaterialfv(GL_FRONT,GL_AMBIENT_AND_DIFFUSE
-		 ,moji_c[(int)(clear_color+.5)]);
-    glRasterPos3d(mag*.1+sub_x, mag*.8+sub_y,d2);
-    glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, 'T');
-    */
-    /*
-    if(temp < temp_ymax){
-      glBegin(GL_LINE_STRIP);
-      glVertex3d(sub_x,    temp/temp_ymax*mag+sub_y,d2);
-      glVertex3d(sub_x+mag,temp/temp_ymax*mag+sub_y,d2);
-      glEnd();
-    }
-    */
-    glColor4fv(line[0]);
-    glBegin(GL_LINE_STRIP);
-    for(i = 0; i < p_count; i++){
-      glVertex3d((double)i/100*mag+sub_x,
-		 (double)temp_data[i]/temp_ymax*mag+sub_y,d2);
-    }
-    glEnd();
-    glColor4fv(waku);
-    glNormal3d(0,0,1);
-    glBegin(GL_LINE_LOOP);
-    glVertex3d(sub_x,sub_y,d2);
-    glVertex3d(sub_x+mag,sub_y,d2);
-    glVertex3d(sub_x+mag,sub_y+mag,d2);
-    glVertex3d(sub_x,sub_y+mag,d2);
-    glEnd();
-
-    color[3] = 1.0;
-    d0 = 1081;
-    if(d0 < temp_ymax){
-      color[0] = 0.2; color[1] = 0.2; color[2] = 0.8;
-      glColor4fv(color);
-      glBegin(GL_LINE_STRIP);
-      glVertex3d(sub_x,    d0/temp_ymax*mag+sub_y,d2);
-      glVertex3d(sub_x+mag,d0/temp_ymax*mag+sub_y,d2);
-      glEnd();
-      small_font(sub_x+mag+0.02,d0/temp_ymax*mag+sub_y-0.04,d2,"MP");
-      small_font(sub_x-0.33,    d0/temp_ymax*mag+sub_y-0.04,d2,"1081K");
-    }
-
-    d1 = 1738;
-    if(d1 < temp_ymax){
-      color[0] = 0.6; color[1] = 0.2; color[2] = 0.2;
-      glColor4fv(color);
-      glBegin(GL_LINE_STRIP);
-      glVertex3d(sub_x,    d1/temp_ymax*mag+sub_y,d2);
-      glVertex3d(sub_x+mag,d1/temp_ymax*mag+sub_y,d2);
-      glEnd();
-      small_font(sub_x+mag+0.02,d1/temp_ymax*mag+sub_y-0.04,d2,"BP");
-      small_font(sub_x-0.34,    d1/temp_ymax*mag+sub_y-0.04,d2,"1738K");
-    }
-
-    if(temp < temp_ymax){
-      color[0] = 0.9; color[1] = 0.9; color[2] = 0.9;
-      glColor4fv(color);
-      glBegin(GL_LINE_STRIP);
-      glVertex3d(sub_x,    temp/temp_ymax*mag+sub_y,d2);
-      glVertex3d(sub_x+mag,temp/temp_ymax*mag+sub_y,d2);
-      glEnd();
-    }
-  }
-#endif
-
-  if(save_flg == 1){
-
-    int x_pixel,y_pixel;
-    int x_len,x_add;
-    char char_buf;
-    char out_name[256];
-    FILE *fp;
-
-    x_pixel = glutGet(GLUT_WINDOW_WIDTH);
-    y_pixel = glutGet(GLUT_WINDOW_HEIGHT);
-
-    if(x_pixel > X_PIX_SIZE || y_pixel > Y_PIX_SIZE){
-      printf("Window size is too large!!\n");
-    } else {
-
-      if((x_pixel*3) % 4 != 0){
-        x_len = (x_pixel*3/4 + 1)*4;
-        x_add = x_len - x_pixel*3;
-      } else {
-        x_len = x_pixel*3;
-        x_add = 0;
-      }
-
-      glReadPixels(0, 0, x_pixel, y_pixel, GL_RGB, GL_UNSIGNED_BYTE, pix);
-
-      for(i = 0; i < y_pixel; i++){
-        for(j = 0; j < x_pixel*3; j += 3){
-          char_buf = pix[i*x_len+j];
-          pix[i*x_len+j] = pix[i*x_len+j+2];
-          pix[i*x_len+j+2] = char_buf;
-        }
-      }
-
-      bmp_header.bfType[0] = 'B';
-      bmp_header.bfType[1] = 'M';
-      bmp_header.bfSize = 14+sizeof(bmp_info)
-        +sizeof(GLubyte)*x_len*y_pixel;
-
-      bmp_header.bfReserved1 = 0;
-      bmp_header.bfReserved2 = 0;
-      bmp_header.bfOffBits = 14+sizeof(bmp_info);
-
-      bmp_info.biSize = sizeof(bmp_info);
-      bmp_info.biWidth = x_pixel;
-      bmp_info.biHeight = y_pixel;
-      bmp_info.biPlanes = 1;
-      bmp_info.biBitCount = 24;
-      bmp_info.biCompression = 0;
-      bmp_info.biSizeImage = sizeof(GLubyte)*x_len*y_pixel;
-      bmp_info.biXPixPerMeter = 0;
-      bmp_info.biYPixPerMeter = 0;
-      bmp_info.biClrUsed = 0;
-      bmp_info.biClrImporant = 0;
-
-      sprintf(out_name,"a%05d.bmp",file_num++);
-      printf("save %s\n",out_name);
-
-      if((fp = fopen(out_name,"wb")) == NULL){
-        printf("file open error\n");
-        exit(1);
-      }
-      fwrite(bmp_header.bfType, sizeof(char),2,fp);
-      fwrite(&bmp_header.bfSize, sizeof(bmp_header.bfSize),1,fp);
-      fwrite(&bmp_header.bfReserved1, sizeof(bmp_header.bfReserved1),1,fp);
-      fwrite(&bmp_header.bfReserved2, sizeof(bmp_header.bfReserved2),1,fp);
-      fwrite(&bmp_header.bfOffBits, sizeof(bmp_header.bfOffBits),1,fp);
-
-      fwrite(&bmp_info, sizeof(bmp_info),1,fp);
-      fwrite(pix,sizeof(char),x_len*y_pixel,fp);
-
-      fclose(fp);
-    }
-  }
-
   glDisable(GL_LIGHT0);
   glDisable(GL_CULL_FACE);
 }
@@ -984,12 +1038,7 @@ void display(void)
   single_display(eye_pos);
 #endif
   glutSwapBuffers();
-  /*
-  if(run_flg == 1)
-    glutIdleFunc(md_run);
-  else
-    glutIdleFunc(NULL);
-  */
+
 }
 void reshape(int w, int h)
 {
@@ -1833,40 +1882,7 @@ void keep_mem(int num_s, int num_w)
     printf("memory error\n");
     exit(1);
   }
-  /*
-  if((nig_data = (int**)malloc((num_s+num_w+add) * sizeof(int*))) == NULL){
-    printf("memory error\n");
-    exit(1);
-  }
-  for(i = 0; i < (num_s+num_w+add); i++)
-    if((nig_data[i] = malloc(6 * sizeof(int))) == NULL){
-      printf("memory error\n");
-      exit(1);
-    }
-  */
 
-  /*
-  if((nig_data = (int**)malloc(sizeof(int*))) == NULL){
-    printf("memory error\n");
-    exit(1);
-  }
-  if((nig_data[0] = (int*)malloc((num_s+num_w+add)*6 * sizeof(int))) == NULL){
-    printf("memory error\n");
-    exit(1);
-  }
-  for(i = 1; i < (num_s+num_w+add); i++)
-    nig_data[i] = nig_data[0] + i*6;
-  */
-  /*
-  printf("%d\n",nig_data);
-  printf("%d\n",nig_data[0]);
-  for(i = 0; i < (num_s+num_w+add); i++){
-    for(j = 0; j < 6; j++){
-      printf("(%d %d %d)",i,j,&nig_data[i][j]);
-    }
-    printf("\n");
-  }
-  */
 
 
   if((atype = malloc((num_s+num_w+add) * sizeof(int))) == NULL){
@@ -2206,7 +2222,7 @@ int main(int argc, char **argv)
   ////Default Configuration (No arguments Passed to Claret)///
   np 	= 9;    ///Number of particles from 1 - 9
   temp 	= 300;// Initial Temperature
-  md_step=100;
+  md_step=10;
   md_loop=10;
   grape_flg = 1;// CPU =0 , GPU = 1
   ////////////////////////////

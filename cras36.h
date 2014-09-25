@@ -20,11 +20,12 @@
 
 #define VTGRAPE // use Virtualized GRAPE library
 #define GL_ON
+#define GL_DRAWARRAY
 
 /*#define SOCK_ON*/
 #define LAP_TIME
 #define C_MASS
-/*#define TELOP*/
+//#define TELOP
 #define SUBWIN
 #define CROSS
 

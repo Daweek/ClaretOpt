@@ -451,10 +451,6 @@ void mdlop(int n3,int grape_flg,double phi [3],double *phir,double *iphi, double
 		gettimeofday(&time_v,NULL);
 		*md_time = (time_v.tv_sec + time_v.tv_usec / 1000000.0);
 
-		//#ifndef GL_ON
-/////////Print System Information
-		//printf("Force Computation Speed: %.3fs/step %.1fGflops\n",md_time-md_time0,(double)n*(double)n*78/(md_time-md_time0)*1e-9);
-//#endif
 	}
 
 /////////////////Copy back to the CPU
